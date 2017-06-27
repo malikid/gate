@@ -7,15 +7,18 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
+KEY_DIR=./keys
+
+cd $OPENVPN_TOOL_PATH
 source vars
 
-touch /etc/openvpn/keys/$1.ovpn
+touch $KEY_DIR/$1.ovpn
 
-cat > /etc/openvpn/keys/$1.ovpn <<EOF
+cat << EOF > $KEY_DIR/$1.ovpn
 client
 dev tun
 proto udp
-remote <<your server name>> 1194
+remote vpn-asia.blocks.services 1194
 resolv-retry infinite
 nobind
 persist-key
@@ -23,6 +26,32 @@ persist-tun
 ca ca.crt
 cert $1.crt
 key $1.key
+
+# Verify server certificate by checking that the
+# certicate has the correct key usage set.
+# This is an important precaution to protect against
+# a potential attack discussed here:
+#  http://openvpn.net/howto.html#mitm
+#
+# To use this feature, you will need to generate
+# your server certificates with the keyUsage set to
+#   digitalSignature, keyEncipherment
+# and the extendedKeyUsage to
+#   serverAuth
+# EasyRSA can do this for you.
+remote-cert-tls server
+
+# If a tls-auth key is used on the server
+# then every client must also have the key.
+;tls-auth ta.key 1
+key-direction 1
+
+# Select a cryptographic cipher.
+# If the cipher option is used on the server
+# then you must also specify it here.
+cipher AES-128-CBC
+auth SHA256
+
 comp-lzo
 verb 3
 auth-user-pass
@@ -30,14 +59,19 @@ auth-nocache
 tun-mtu 1400
 mssfix 1400
 #Add your routes
-route <<x.1.0.0 255.255.0.0>>
-route <<x.4.0.0 255.255.0.0>>
+#route <<x.1.0.0 255.255.0.0>>
+#route <<x.4.0.0 255.255.0.0>>
 EOF
 
-./pkitool $1
-cd /etc/openvpn/keys/ && tar zcf $1.tar.gz ca.crt $1.crt $1.key $1.ovpn
-chmod 0600 $1.tar.gz
+cat <(echo -e '\n<tls-auth>') \
+    $KEY_DIR/ta.key \
+    <(echo -e '</tls-auth>') \
+    >> $KEY_DIR/$1.ovpn
 
-mkdir -p  /opt/vpnkeys/
-cp $1.tar.gz /opt/vpnkeys/
-rm $1.*
+./pkitool $1
+cd $KEY_DIR/ && sudo tar zcf $1.tar.gz ca.crt $1.crt $1.key $1.ovpn
+#sudo chmod 0600 $1.tar.gz
+
+sudo mkdir -p $OPENVPN_PATH/
+sudo cp $1.tar.gz $OPENVPN_PATH/
+rm -f $1.*
