@@ -34,6 +34,20 @@ GATE_HOSTED_DOMAIN      - The hosted domain for gmail
 GATE_SERVER_URL         - Gate server FQDN
 GATE_CONFIG_SECRET      - Ruby required config secret key in production environment
 GATE_EMAIL_DOMAIN       - Your company's domain for email address
+
+GATE_DB_HOST		- Your database host (ex: 127.0.0.1)
+GATE_DB_PORT		- Your database port (ex: 3306)
+GATE_DB_USER		- Your database user (ex: gateUser)
+GATE_DB_PASSWORD	- Your database password (ex: blablablah)
+
+CACHE_HOST		- Your redis host (ex: 127.0.0.1)
+CACHE_PORT		- Your redis port (ex: 6379)
+
+OPENVPN_TOOL_PATH	- OpenVpn CA Directory (with `build_xxx` and `pkitool` in it)
+OPENVPN_PATH		- OpenVpn Service Directory (with `server.conf` and `xxx.crt`, `xxx.key` in it)
+
+SECRET_KEY_BASE         - Secret key for rails production (run `RAILS_ENV=production rake secret` and get one)
+RAILS_SERVE_STATIC_FILES- Static file path for rails production (ex: $RAILS_PROJECT_DIR/public)
 ```
 
 * Run bundle exec rake db:create db:migrate db:seed
